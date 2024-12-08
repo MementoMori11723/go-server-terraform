@@ -22,7 +22,7 @@ resource "render_web_service" "Default" {
     native_runtime = {
       auto_deploy   = true
       branch        = "master"
-      build_command = "go build -ldflags='-s -w' -o app"
+      build_command = "echo 'running build step' && go build -ldflags='-s -w' -o app"
       repo_url      = "https://github.com/MementoMori11723/go-terraform-server"
       runtime       = "go"
     }
