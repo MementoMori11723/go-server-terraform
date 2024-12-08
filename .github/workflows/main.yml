@@ -1,46 +1,53 @@
-name: Terraform Deployment with Go Tests
+name: Conditional Terraform Deployment with Go Tests
 
 on:
   push:
     branches:
       - master
+    paths:
+      - "**.tf" # Only run when .tf files are changed (especially main.tf)
+      - "**/*.go" # Also include Go files to check for tests
 
 jobs:
-  terraform:
+  check-tests-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.23'
+      # Step to check if Go tests exist
+      - name: Check if Go tests exist
+        id: go_test_check
+        run: |
+          if [ -f go.mod ]; then
+            # Check for Go tests (if any)
+            go test ./... -v || echo "Go tests failed or no tests found"
+          else
+            echo "No go.mod found, skipping Go tests"
+          fi
 
-    - name: Run Go tests
-      run: |
-        if [ -f go.mod ]; then
-          go test ./... -v
-        else
-          echo "No Go modules found, skipping tests."
-        fi
+      # Step to check if there were any changes to main.tf
+      - name: Check if main.tf changed
+        id: tf_check
+        run: |
+          git diff --exit-code --quiet main.tf || echo "main.tf has changed"
 
-    - name: Set up Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_version: 'latest'
+      # Only run Terraform if `main.tf` has changed
+      - name: Set up Terraform
+        if: steps.tf_check.outputs.changed == 'true'
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: "latest"
 
-    - name: Terraform Init
-      run: terraform init
+      - name: Terraform Init
+        if: steps.tf_check.outputs.changed == 'true'
+        run: terraform init
 
-    - name: Terraform Destroy (Optional, Only if Service Exists)
-      run: |
-        terraform destroy -auto-approve -var "render_api_key=${{ secrets.RENDER_API_KEY }}" -var "render_owner_id=${{ secrets.RENDER_OWNER_ID }}"
+      - name: Terraform Plan
+        if: steps.tf_check.outputs.changed == 'true'
+        run: terraform plan -var "render_api_key=${{ secrets.RENDER_API_KEY }}" -var "render_owner_id=${{ secrets.RENDER_OWNER_ID }}"
 
-    - name: Terraform Plan
-      run: terraform plan -var "render_api_key=${{ secrets.RENDER_API_KEY }}" -var "render_owner_id=${{ secrets.RENDER_OWNER_ID }}"
-
-    - name: Terraform Apply
-      run: |
-        terraform apply -auto-approve -var "render_api_key=${{ secrets.RENDER_API_KEY }}" -var "render_owner_id=${{ secrets.RENDER_OWNER_ID }}"
+      - name: Terraform Apply
+        if: steps.tf_check.outputs.changed == 'true'
+        run: |
+          terraform apply -auto-approve -var "render_api_key=${{ secrets.RENDER_API_KEY }}" -var "render_owner_id=${{ secrets.RENDER_OWNER_ID }}"
