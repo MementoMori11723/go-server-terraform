@@ -13,7 +13,7 @@ provider "render" {
 }
 
 resource "render_web_service" "Default" {
-  name          = "go-terraform-server"
+  name          = "terraform-go-server"
   plan          = "starter"
   region        = "oregon"
   start_command = "./app"
@@ -22,7 +22,7 @@ resource "render_web_service" "Default" {
     native_runtime = {
       auto_deploy   = true
       branch        = "master"
-      build_command = "go build -o app"
+      build_command = "go build -ldflags='-s -w' -o app"
       repo_url      = "https://github.com/MementoMori11723/go-terraform-server"
       runtime       = "go"
     }
