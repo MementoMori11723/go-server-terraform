@@ -36,7 +36,7 @@ jobs:
 
     - name: Terraform Destroy (Optional, Only if Service Exists)
       run: |
-        terraform destroy -force -var "render_api_key=${{ secrets.RENDER_API_KEY }}" -var "render_owner_id=${{ secrets.RENDER_OWNER_ID }}"
+        terraform destroy -auto-approve -var "render_api_key=${{ secrets.RENDER_API_KEY }}" -var "render_owner_id=${{ secrets.RENDER_OWNER_ID }}"
 
     - name: Terraform Plan
       run: terraform plan -var "render_api_key=${{ secrets.RENDER_API_KEY }}" -var "render_owner_id=${{ secrets.RENDER_OWNER_ID }}"
