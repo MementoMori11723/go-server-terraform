@@ -29,8 +29,5 @@ jobs:
     - name: Terraform Plan
       run: terraform plan -out=tfplan
     - name: Terraform Apply
-      run: terraform apply -auto-approve tfplan
-      env:
-        RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-        RENDER_OWNER_ID: ${{ secrets.RENDER_OWNER_ID }}
-
+      run: |
+        terraform apply -auto-approve -var "render_api_key=${{ secrets.RENDER_API_KEY }}" -var "render_owner_id=${{ secrets.RENDER_OWNER_ID }}" tfplan
