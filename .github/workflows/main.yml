@@ -5,8 +5,8 @@ on:
     branches:
       - master
     paths:
-      - "**.tf" # Only run when .tf files are changed (especially main.tf)
-      - "**/*.go" # Also include Go files to check for tests
+      - main.tf # Trigger workflow only if main.tf changes
+      - "**/*.go" # Include Go files to check for tests
 
 jobs:
   check-tests-and-deploy:
@@ -16,38 +16,26 @@ jobs:
         uses: actions/checkout@v3
 
       # Step to check if Go tests exist
-      - name: Check if Go tests exist
-        id: go_test_check
+      - name: Run Go tests
         run: |
           if [ -f go.mod ]; then
-            # Check for Go tests (if any)
-            go test ./... -v || echo "Go tests failed or no tests found"
+            echo "Running Go tests..."
+            go test ./... -v
           else
-            echo "No go.mod found, skipping Go tests"
+            echo "No Go tests found, skipping tests."
           fi
 
-      # Step to check if there were any changes to main.tf
-      - name: Check if main.tf changed
-        id: tf_check
-        run: |
-          git diff --exit-code --quiet main.tf || echo "main.tf has changed"
-
-      # Only run Terraform if `main.tf` has changed
+      # Terraform Steps
       - name: Set up Terraform
-        if: steps.tf_check.outputs.changed == 'true'
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: "latest"
 
       - name: Terraform Init
-        if: steps.tf_check.outputs.changed == 'true'
         run: terraform init
 
       - name: Terraform Plan
-        if: steps.tf_check.outputs.changed == 'true'
         run: terraform plan -var "render_api_key=${{ secrets.RENDER_API_KEY }}" -var "render_owner_id=${{ secrets.RENDER_OWNER_ID }}"
 
       - name: Terraform Apply
-        if: steps.tf_check.outputs.changed == 'true'
-        run: |
-          terraform apply -auto-approve -var "render_api_key=${{ secrets.RENDER_API_KEY }}" -var "render_owner_id=${{ secrets.RENDER_OWNER_ID }}"
+        run: terraform apply -auto-approve -var "render_api_key=${{ secrets.RENDER_API_KEY }}" -var "render_owner_id=${{ secrets.RENDER_OWNER_ID }}"
