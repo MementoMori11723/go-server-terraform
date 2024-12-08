@@ -19,7 +19,7 @@ func main() {
 	tmpl := template.Must(template.ParseFiles("pages/layouts.html"))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		data := TodoPageData{
-			PageTitle: "Simple Todo List",
+			PageTitle: "Simple Basic Todo List",
 			Todos: []Todo{
 				{
 					Title: "Task - 1",
