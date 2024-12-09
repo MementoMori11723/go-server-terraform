@@ -5,6 +5,12 @@ terraform {
       version = "~> 1.3.6"
     }
   }
+
+  backend "s3" {
+    bucket     = "terraform-test-11723"
+    key        = "terraform.tfstate"
+    region     = "eu-north-1"
+  }
 }
 
 provider "render" {
@@ -37,6 +43,18 @@ variable "render_api_key" {
 
 variable "render_owner_id" {
   description = "Render owner ID"
+  type        = string
+  sensitive   = true
+}
+
+variable "aws_access_key" {
+  description = "AWS access key"
+  type        = string
+  sensitive   = true
+}
+
+variable "aws_secret_key" {
+  description = "AWS secret key"
   type        = string
   sensitive   = true
 }
